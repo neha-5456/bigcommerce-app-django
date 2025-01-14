@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -80,7 +80,7 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
+# ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app", ".now.sh"]
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -116,18 +116,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = '/static/'  # URL to access static files in the browser
-
-# Additional directories for custom static files
-STATICFILES_DIRS = [
-    BASE_DIR / "static"  # Your project's static directory (e.g., CSS, JS, images)
-]
-
-# Directory for collected static files (used in production)
-STATIC_ROOT = BASE_DIR / "staticfiles"
-# Media file settings (if applicable)
-MEDIA_URL = '/media/'  # URL to access media files
-MEDIA_ROOT = BASE_DIR / "media"  # Directory for uploaded media files
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "ui/static")]
+STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "ui/staticfiles")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
