@@ -119,15 +119,3 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
-
-# BIGCOMMERCE = {
-#     'client_id': '7k8045hpi7yytidpf6tzuzz8t10o3i2',
-#     'client_secret': 'edf5b63b03b4e3eef72a4bca6ce41bc983c460661d4033ba49588304ea404188',
-#     'auth_callback_url': 'https://django-bigcommerce-app-sigma.vercel.app/api/auth/callback',
-#     'store_hash': '0sl32ohrbq',
-#     'api_base_url': 'https://api.bigcommerce.com/stores/0sl32ohrbq/v3',
-#     'access_token': 'qw057iqufn4b9wzr6jk7rn2jqtmqher',
-# }
