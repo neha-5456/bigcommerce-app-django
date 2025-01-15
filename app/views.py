@@ -33,12 +33,9 @@ REDIRECT_URI = "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/"
 
 # Step 1: Handle app installation
 def install(request):
-    install_url = request.GET.get('install_url')
-    if install_url:
-        redirect_url = f"{install_url}?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=read_orders write_orders&response_type=code"
-        return redirect(redirect_url)
-    else:
-        return JsonResponse({"error": "Install URL not provided"}, status=400)
+    redirect_url = f"{install_url}?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=read_orders write_orders&response_type=code"
+    return redirect(redirect_url)
+    
 
 def auth_callback(request):
     code = request.GET.get('code')
