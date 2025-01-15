@@ -29,7 +29,7 @@ def test(request):
 
 CLIENT_ID = '7k8045hpi7yytidpf6tzuzz8t10o3i2'
 CLIENT_SECRET = 'edf5b63b03b4e3eef72a4bca6ce41bc983c460661d4033ba49588304ea404188'
-REDIRECT_URI = "https://bigcommerce-app-django.vercel.app/auth/callback/"
+REDIRECT_URI = "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/"
 
 # Step 1: Handle app installation
 def install(request):
