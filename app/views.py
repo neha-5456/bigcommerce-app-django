@@ -38,7 +38,7 @@ def install(request):
 
 # Step 2: Handle OAuth callback
 def auth_callback(request):
-    HttpResponse(request)
+    
     code = request.GET.get('code')
     scope = request.GET.get('scope')
     context = request.GET.get('context')
