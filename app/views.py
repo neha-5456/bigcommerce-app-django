@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 import requests
 from django.http import JsonResponse
-
+import logging
 def index(request):
     now = datetime.now()
     html = f'''
@@ -32,51 +32,70 @@ CLIENT_SECRET = 'edf5b63b03b4e3eef72a4bca6ce41bc983c460661d4033ba49588304ea40418
 REDIRECT_URI = "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/"
 
 # Step 1: Handle app installation
+
+
+logger = logging.getLogger(__name__)
+
 def install(request):
-    redirect_url = (
-        f"https://login.bigcommerce.com/oauth2/authorize"
-        f"?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=read_orders write_orders&response_type=code"
-    )
-    return redirect(redirect_url)
-
-def auth_callback(request):
-    code = request.GET.get('code')
-    if not code:
-        return JsonResponse({"error": "Authorization code is missing"}, status=400)
-
-    token_url = "https://login.bigcommerce.com/oauth2/token"
+    # Step 1: Prepare the payload for token exchange
     payload = {
-        "client_id": CLIENT_ID,
+        "client_id": CLIENT_ID,  # Replace with your environment variable or config
         "client_secret": CLIENT_SECRET,
-        "redirect_uri": REDIRECT_URI,
+        "redirect_uri": REDIRECT_URI,  # Replace with your environment variable or config
         "grant_type": "authorization_code",
-        "code": code,
+        "code": request.GET.get("code"),
+        "scope": request.GET.get("scope"),
+        "context": request.GET.get("context"),
     }
 
+    # Step 2: Send a POST request to BigCommerce OAuth2 endpoint
+    token_url = "https://login.bigcommerce.com/oauth2/token"
     response = requests.post(token_url, json=payload)
+
     if response.status_code == 200:
+        # Step 3: Handle successful token response
         data = response.json()
-        # Store access token in your database (important: do not redirect to the install page again)
-        return JsonResponse(data)  # Replace with redirect to your app's dashboard
+
+        # Extract necessary data
+        context = data.get("context")
+        store_hash = context.split("/")[-1]  # Get store hash from context
+        access_token = data.get("access_token")
+        user_email = data.get("user", {}).get("email")
+
+        # Step 4: Call create_script to register the app script
+        create_script(store_hash, access_token, "app.js")
+
+        # Respond with success message or redirect to a success page
+        return JsonResponse({"message": "App installed successfully", "store_hash": store_hash, "email": user_email})
+
     else:
-        print(response.text)  # Debugging
-        return JsonResponse({"error": "Authorization failed", "details": response.text}, status=400)
+        # Step 5: Handle errors
+        error_message = response.json()
+        logger.error(f"Error obtaining OAuth2 token: {error_message}")
+        return JsonResponse({"error": "Authorization failed", "details": error_message}, status=response.status_code)
 
-
-def custom_tab(request):
-    access_token = "qw057iqufn4b9wzr6jk7rn2jqtmqher"
-    store_hash = "0sl32ohrbq"
-
+def create_script(store_hash, access_token, script_name):
+    # Step 6: Register a script with BigCommerce API
+    script_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/content/scripts"
     headers = {
         "X-Auth-Token": access_token,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
 
-    product_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/catalog/products"
-    response = requests.get(product_url, headers=headers)
+    payload = {
+        "name": script_name,
+        "description": "A custom script for the BigCommerce app.",
+        "html": "<script src='https://example.com/static/app.js'></script>",
+        "auto_uninstall": True,
+        "load_method": "default",
+        "location": "footer",
+        "visibility": "all",
+        "kind": "script_tag",
+    }
 
-    if response.status_code == 200:
-        products = response.json()
-        return JsonResponse({"products": products})
+    response = requests.post(script_url, json=payload, headers=headers)
+
+    if response.status_code == 201:
+        logger.info("Script successfully registered")
     else:
-        return JsonResponse({"error": "Failed to fetch products"}, status=400)
+        logger.error(f"Failed to create script: {response.text}")
