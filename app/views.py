@@ -61,7 +61,7 @@ def auth_callback(request):
         return JsonResponse(data)
     else:
          print(response.text)  # To see the full error message from BigCommerce
-         return JsonResponse({"error": "Authorization failed", "details": response.text}, status=400)
+    return JsonResponse({"error": "Authorization failed", "details": response.text}, status=400)
     
 def custom_tab(request):
     access_token = "qw057iqufn4b9wzr6jk7rn2jqtmqher"
