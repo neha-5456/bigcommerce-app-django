@@ -33,16 +33,17 @@ REDIRECT_URI = "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/"
 
 # Step 1: Handle app installation
 def install(request):
-    redirect_url = f"?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=read_orders write_orders&response_type=code"
+    redirect_url = (
+        f"https://login.bigcommerce.com/oauth2/authorize"
+        f"?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=read_orders write_orders&response_type=code"
+    )
     return redirect(redirect_url)
-    
 
 def auth_callback(request):
     code = request.GET.get('code')
     if not code:
         return JsonResponse({"error": "Authorization code is missing"}, status=400)
 
-    # Exchange code for access token
     token_url = "https://login.bigcommerce.com/oauth2/token"
     payload = {
         "client_id": CLIENT_ID,
@@ -55,9 +56,8 @@ def auth_callback(request):
     response = requests.post(token_url, json=payload)
     if response.status_code == 200:
         data = response.json()
-        # Store access token in your database
-        # Redirect to a success page or dashboard (NOT to the install page again)
-        return JsonResponse(data)
+        # Store access token in your database (important: do not redirect to the install page again)
+        return JsonResponse(data)  # Replace with redirect to your app's dashboard
     else:
         print(response.text)  # Debugging
         return JsonResponse({"error": "Authorization failed", "details": response.text}, status=400)
