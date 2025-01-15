@@ -4,9 +4,9 @@ from app.views import index, test , install , auth_callback , custom_tab
 
 
 urlpatterns = [
-    path('', index),
+    path('', install),
     path('test/', test),
-    path('install/', install, name='install'),
+    # path('install/', install, name='install'),
     path('auth/callback/', auth_callback, name='auth_callback'),
     path('custom-tab/', custom_tab, name='custom_tab'),
     
