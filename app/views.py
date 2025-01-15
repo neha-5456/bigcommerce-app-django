@@ -34,15 +34,18 @@ REDIRECT_URI = "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/"
 # Step 1: Handle app installation
 def install(request):
     install_url = request.GET.get('install_url')
-    return redirect(f"?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}")
+    if install_url:
+        redirect_url = f"{install_url}?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=read_orders write_orders&response_type=code"
+        return redirect(redirect_url)
+    else:
+        return JsonResponse({"error": "Install URL not provided"}, status=400)
 
-# Step 2: Handle OAuth callback
 def auth_callback(request):
-    
     code = request.GET.get('code')
-    scope = request.GET.get('scope')
-    context = request.GET.get('context')
+    if not code:
+        return JsonResponse({"error": "Authorization code is missing"}, status=400)
 
+    # Exchange code for access token
     token_url = "https://login.bigcommerce.com/oauth2/token"
     payload = {
         "client_id": CLIENT_ID,
@@ -50,19 +53,19 @@ def auth_callback(request):
         "redirect_uri": REDIRECT_URI,
         "grant_type": "authorization_code",
         "code": code,
-        "scope": scope,
-        "context": context,
     }
 
     response = requests.post(token_url, json=payload)
     if response.status_code == 200:
         data = response.json()
-        # Save access token, store hash, and user details in your database
+        # Store access token in your database
+        # Redirect to a success page or dashboard (NOT to the install page again)
         return JsonResponse(data)
     else:
-         print(response.text)  # To see the full error message from BigCommerce
-    return JsonResponse({"error": "Authorization failed", "details": response.text}, status=400)
-    
+        print(response.text)  # Debugging
+        return JsonResponse({"error": "Authorization failed", "details": response.text}, status=400)
+
+
 def custom_tab(request):
     access_token = "qw057iqufn4b9wzr6jk7rn2jqtmqher"
     store_hash = "0sl32ohrbq"
