@@ -45,8 +45,8 @@ def auth_callback(request):
 
     token_url = "https://login.bigcommerce.com/oauth2/token"
     payload = {
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
+        "client_id": 'n52tn8ffugohj3n6w9ybda12laoc7r',
+        "client_secret": 'd4d1cc283a571aecb7793f8b6e80f1d3c37eb45740af0dcc7617cbc43a6ad3bc',
         "redirect_uri": REDIRECT_URI,
         "grant_type": "authorization_code",
         "code": code,
