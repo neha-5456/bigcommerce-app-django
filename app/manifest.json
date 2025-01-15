@@ -1,0 +1,18 @@
+{
+    "name": "BigCommerce Custom App",
+    "description": "An app with a custom tab for product descriptions and reviews.",
+    "icon": "",
+    "auth_callback": "/auth/callback/",
+    "details_path": "/custom-tab/",
+    "tabs": [
+      {
+        "name": "Product Details",
+        "url": "/custom-tab/"
+      }
+    ],
+    "scopes": [
+      "store_v2_content",
+      "store_v2_products_read_only"
+    ]
+  }
+  

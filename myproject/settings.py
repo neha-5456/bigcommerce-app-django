@@ -119,3 +119,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# ACCESS TOKEN: qw057iqufn4b9wzr6jk7rn2jqtmqher
+# CLIENT NAME: python custom widgest app
+# CLIENT ID: 7k8045hpi7yytidpf6tzuzz8t10o3i2
+# CLIENT SECRET: edf5b63b03b4e3eef72a4bca6ce41bc983c460661d4033ba49588304ea404188
+# NAME: python custom widgest app
+# API PATH: https://api.bigcommerce.com/stores/0sl32ohrbq/v3/
