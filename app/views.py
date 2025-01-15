@@ -60,7 +60,8 @@ def auth_callback(request):
         # Save access token, store hash, and user details in your database
         return JsonResponse(data)
     else:
-        return JsonResponse({"error": "Authorization failed"}, status=400)
+         print(response.text)  # To see the full error message from BigCommerce
+         return JsonResponse({"error": "Authorization failed", "details": response.text}, status=400)
     
 def custom_tab(request):
     access_token = "qw057iqufn4b9wzr6jk7rn2jqtmqher"
