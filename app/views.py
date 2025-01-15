@@ -31,39 +31,37 @@ CLIENT_ID = '7k8045hpi7yytidpf6tzuzz8t10o3i2'
 CLIENT_SECRET = 'edf5b63b03b4e3eef72a4bca6ce41bc983c460661d4033ba49588304ea404188'
 REDIRECT_URI = "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/"
 
+# Step 1: Handle app installation
 def install(request):
     install_url = request.GET.get('install_url')
-    if install_url:
-        redirect_url = f"{install_url}?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=read_orders write_orders&response_type=code"
-        return redirect(redirect_url)
-    else:
-        return JsonResponse({"error": "Install URL not provided"}, status=400)
+    return redirect(f"?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}")
 
+# Step 2: Handle OAuth callback
 def auth_callback(request):
+    
     code = request.GET.get('code')
-    if not code:
-        return JsonResponse({"error": "Authorization code is missing"}, status=400)
+    scope = request.GET.get('scope')
+    context = request.GET.get('context')
 
-    # Exchange code for access token
     token_url = "https://login.bigcommerce.com/oauth2/token"
     payload = {
         "client_id": CLIENT_ID,
         "client_secret": CLIENT_SECRET,
-        "redirect_uri": REDIRECT_URI,
+        "redirect_uri": "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/",
         "grant_type": "authorization_code",
         "code": code,
+        "scope": scope,
+        "context": context,
     }
 
     response = requests.post(token_url, json=payload)
     if response.status_code == 200:
         data = response.json()
-        # Store access token in your database
-        # Redirect to a success page or dashboard (NOT to the install page again)
+        # Save access token, store hash, and user details in your database
         return JsonResponse(data)
     else:
-        print(response.text)  # Debugging
-        return JsonResponse({"error": "Authorization failed", "details": response.text}, status=400)
-
+         print(response.text)  # To see the full error message from BigCommerce
+    return JsonResponse({"error": "Authorization failed", "details": response.text}, status=400)
     
 def custom_tab(request):
     access_token = "qw057iqufn4b9wzr6jk7rn2jqtmqher"
