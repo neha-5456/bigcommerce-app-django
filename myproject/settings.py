@@ -25,8 +25,7 @@ SECRET_KEY = 'django-insecure-5vjfb*9r#s133gqc6zsumq!zjkto=&unx^ylht-$=bhb31dvpb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['bigcommerce-app-django.vercel.app', '127.0.0.1', 'localhost']
-
+ALLOWED_HOSTS = ['.vercel.app']
 WSGI_APPLICATION = 'myproject.wsgi.app'
 
 
