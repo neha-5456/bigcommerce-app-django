@@ -41,6 +41,7 @@ REDIRECT_URI = "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/"
 
 
 logger = logging.getLogger(__name__)
+from django.db import IntegrityError
 
 def install(request):
     # Prepare the payload
@@ -56,7 +57,7 @@ def install(request):
 
     # BigCommerce OAuth2 token URL
     token_url = "https://login.bigcommerce.com/oauth2/token"
-    
+
     # Retry logic
     for attempt in range(3):  # Retry 3 times
         try:
@@ -76,10 +77,24 @@ def install(request):
         store_hash = context.split("/")[-1]
         access_token = data.get("access_token")
         user_email = data.get("user", {}).get("email")
-        create_script(store_hash, access_token, "app.js")
+
+        # Check if the store_hash already exists in the database
+        try:
+            # Try to get the existing record
+            store_data = StoreData.objects.get(store_hash=store_hash)
+            # If found, update the access token
+            store_data.access_token = access_token
+            store_data.user_email = user_email
+            store_data.save()
+            logger.info(f"Updated access token for store {store_hash}.")
+        except StoreData.DoesNotExist:
+            # If not found, create a new record
+            store_data = StoreData(store_hash=store_hash, access_token=access_token, user_email=user_email)
+            store_data.save()
+            logger.info(f"New store data added for {store_hash}.")
         
-        record = StoreData(store_hash=store_hash, access_token=access_token, user_email=user_email)
-        record.save()
+        # Create script or perform additional actions
+        create_script(store_hash, access_token, "app.js")
 
         # Redirect to BigCommerce dashboard
         bigcommerce_dashboard_url = f"https://store-0sl32ohrbq.mybigcommerce.com/manage/app"
@@ -90,6 +105,7 @@ def install(request):
         error_message = response.json()
         logger.error(f"Error obtaining OAuth2 token: {error_message}")
         return JsonResponse({"error": "Authorization failed", "details": error_message}, status=response.status_code)
+
 
 
 
