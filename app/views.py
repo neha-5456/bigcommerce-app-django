@@ -7,7 +7,10 @@ import logging
 from .models import StoreData
 # import IntegrityError
 import time
-
+import hmac
+import hashlib
+import base64
+import json
 def index(request):
     now = datetime.now()
     html = f'''
@@ -110,45 +113,30 @@ def install(request):
 
 
 
+
 def load(request):
-    # This view will render the app's UI inside BigCommerce's iframe
-    return render(request, 'load_app.html')
-# def create_script(store_hash, access_token, script_name):
-#     # Step 1: Set the BigCommerce API URL for script creation
-#     script_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/content/scripts"
-    
-#     # Step 2: Set the headers for the request (use the valid access token)
-#     headers = {
-#         "X-Auth-Token": access_token,
-#         "Content-Type": "application/json",
-#     }
-    
-#     # Step 3: Define the payload (the data for the script)
-#     payload = {
-#         "name": script_name,
-#         "description": "A custom script for the BigCommerce app.",
-#         "html": "<script src='https://bigcommerce-app-django-9iyk.vercel.app/static/app.js'></script>",  # Your hosted JS file URL
-#         "auto_uninstall": True,
-#         "load_method": "default",
-#         "location": "footer",  # Location on the page (can be "header", "footer", etc.)
-#         "visibility": "ALL_PAGES",  # Visibility on all pages
-#         "kind": "script_tag",  # Type of script (usually "script_tag" for JS files)
-#     }
-    
-#     # Step 4: Make the POST request to create the script
-#     try:
-#         response = requests.post(script_url, json=payload, headers=headers)
-        
-#         # Step 5: Handle the response
-#         if response.status_code == 201:
-#             logger.info("Script successfully registered")
-#             return {"message": "Script created successfully"}
-#         else:
-#             logger.error(f"Failed to create script: {response.status_code} - {response.text}")
-#             return {"error": "Failed to create script", "details": response.json()}
-    
-#     except requests.exceptions.RequestException as e:
-#         logger.error(f"Request failed: {str(e)}")
-#         return {"error": "Request failed", "details": str(e)}
+    signed_payload = request.GET.get('signed_payload')
+    if not signed_payload:
+        return JsonResponse({"error": "Missing signed payload"}, status=400)
 
+    try:
+        # Decode signed payload
+        encoded_data, encoded_signature = signed_payload.split('.')
+        signature = base64.b64decode(encoded_signature)
+        expected_signature = hmac.new(
+            CLIENT_SECRET.encode(), msg=encoded_data.encode(), digestmod=hashlib.sha256
+        ).digest()
 
+        if not hmac.compare_digest(signature, expected_signature):
+            return JsonResponse({"error": "Invalid signature"}, status=403)
+
+        # Decode and parse the data
+        data = json.loads(base64.b64decode(encoded_data).decode())
+        store_hash = data.get('context').split('/')[-1]
+        user_email = data.get('user', {}).get('email')
+
+        # Render the app UI
+        return render(request, 'load_app.html', {"store_hash": store_hash, "user_email": user_email})
+
+    except Exception as e:
+        return JsonResponse({"error": "Invalid payload", "details": str(e)}, status=400)
