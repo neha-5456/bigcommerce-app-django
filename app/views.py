@@ -5,7 +5,6 @@ import requests
 from django.http import JsonResponse
 import logging
 from .models import StoreData
-from django.db import IntegrityError
 
 def index(request):
     now = datetime.now()
@@ -68,20 +67,12 @@ def install(request):
         user_email = data.get("user", {}).get("email")
         
         
-        # try:
-        #     record = StoreData(store_hash=store_hash, access_token=access_token, user_email=user_email)
-        #     record.save()
-        #     logger.info(f"Store data saved: {store_hash}")
-        # except Exception as e:  # Catching all exceptions to log the error
-        #     logger.error(f"Error saving store data: {str(e)}")
-        #     return JsonResponse({"error": "Failed to save store data."}, status=500)
-        
         
         # Step 4: Call create_script to register the app script
         create_script(store_hash, access_token, "app.js")
 
         # Respond with success message or redirect to a success page
-        return JsonResponse({"message": "App installed successfully", "store_hash": store_hash, "email": user_email, "access token": access_token, "data":data})
+        return JsonResponse({"message": "App installed successfully", "store_hash": store_hash, "email": user_email})
 
     else:
         # Step 5: Handle errors
