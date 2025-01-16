@@ -143,4 +143,14 @@ def create_script(store_hash, access_token, script_name):
 
 
 def load(request):
-    return 12313
+    now = datetime.now()
+    html = f'''
+    <html>
+        <body>
+            <h1>Hello from Vercel!</h1>
+            <p>The current time is { now }.</p>
+        </body>
+    </html>
+    '''
+    return HttpResponse(html)
+   
