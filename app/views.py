@@ -91,6 +91,8 @@ def install(request):
         logger.error(f"Error obtaining OAuth2 token: {error_message}")
         return JsonResponse({"error": "Authorization failed", "details": error_message}, status=response.status_code)
 
+
+
 def create_script(store_hash, access_token, script_name):
     # Step 6: Register a script with BigCommerce API
     script_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/content/scripts"
@@ -106,7 +108,7 @@ def create_script(store_hash, access_token, script_name):
         "auto_uninstall": True,
         "load_method": "default",
         "location": "footer",
-        "visibility": "all",
+        "visibility": "ALL_PAGES",  # Corrected value
         "kind": "script_tag",
     }
 
@@ -116,4 +118,5 @@ def create_script(store_hash, access_token, script_name):
         logger.info("Script successfully registered")
     else:
         logger.error(f"Failed to create script: {response.text}")
+
 
