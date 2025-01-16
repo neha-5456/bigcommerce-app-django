@@ -1,11 +1,11 @@
 from django.urls import path
 
-from app.views import  test , install , auth_callback 
+from app.views import  index , install 
 
 
 urlpatterns = [
     # path('', install),
-    path('test/', test),
+    path('', index),
    
     path('auth/callback/', install, name='auth_callback'),
    
