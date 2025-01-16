@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your BigCommerce App</title>
+    <script src="https://cdn.bigcommerce.com/bc/app.js"></script>
+</head>
+<body>
+    <h1>Welcome to Your BigCommerce App</h1>
+    
+    <p>Store hash: {{ store_hash }}</p>
+    <p>Access token: {{ access_token }}</p>
+    
+    <!-- Your App UI Goes Here -->
+    <div id="app-content">
+        <!-- Example content: you can add your custom widgets, forms, etc. -->
+        <p>Custom UI components will go here.</p>
+    </div>
+
+    <!-- Optional: Include custom JavaScript -->
+    <script>
+        // You can use BigCommerce's API, or add other custom JS here
+        console.log('BigCommerce app loaded');
+    </script>
+</body>
+</html>

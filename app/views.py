@@ -120,3 +120,15 @@ def create_script(store_hash, access_token, script_name):
         logger.error(f"Failed to create script: {response.text}")
 
 
+def load(request):
+    # Check for necessary data such as OAuth tokens, store hash, etc.
+    # This data might be passed in the request or stored in the database
+    store_hash = "test"
+    access_token = "token test"
+
+    # You can render a template that contains the app's UI
+    context = {
+        'store_hash': store_hash,
+        'access_token': access_token,
+    }
+    return render(request, 'load_app_ui.html', context)
