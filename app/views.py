@@ -112,7 +112,7 @@ def install(request):
 
 def load(request):
     # This view will render the app's UI inside BigCommerce's iframe
-    return render(request, 'app_ui.html')
+    return render(request, 'load_app.html')
 # def create_script(store_hash, access_token, script_name):
 #     # Step 1: Set the BigCommerce API URL for script creation
 #     script_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/content/scripts"
