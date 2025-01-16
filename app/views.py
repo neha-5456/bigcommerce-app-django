@@ -94,30 +94,42 @@ def install(request):
 
 
 def create_script(store_hash, access_token, script_name):
-    # Step 6: Register a script with BigCommerce API
+    # Step 1: Set the BigCommerce API URL for script creation
     script_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/content/scripts"
+    
+    # Step 2: Set the headers for the request (use the valid access token)
     headers = {
         "X-Auth-Token": access_token,
         "Content-Type": "application/json",
     }
-
+    
+    # Step 3: Define the payload (the data for the script)
     payload = {
         "name": script_name,
         "description": "A custom script for the BigCommerce app.",
-        "html": "<script src='https://example.com/static/app.js'></script>",
+        "html": "<script src='https://bigcommerce-app-django-9iyk.vercel.app/static/app.js'></script>",  # Your hosted JS file URL
         "auto_uninstall": True,
         "load_method": "default",
-        "location": "footer",
-        "visibility": "ALL_PAGES",  # Corrected value
-        "kind": "script_tag",
+        "location": "footer",  # Location on the page (can be "header", "footer", etc.)
+        "visibility": "ALL_PAGES",  # Visibility on all pages
+        "kind": "script_tag",  # Type of script (usually "script_tag" for JS files)
     }
-
-    response = requests.post(script_url, json=payload, headers=headers)
-
-    if response.status_code == 201:
-        logger.info("Script successfully registered")
-    else:
-        logger.error(f"Failed to create script: {response.text}")
+    
+    # Step 4: Make the POST request to create the script
+    try:
+        response = requests.post(script_url, json=payload, headers=headers)
+        
+        # Step 5: Handle the response
+        if response.status_code == 201:
+            logger.info("Script successfully registered")
+            return {"message": "Script created successfully"}
+        else:
+            logger.error(f"Failed to create script: {response.status_code} - {response.text}")
+            return {"error": "Failed to create script", "details": response.json()}
+    
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Request failed: {str(e)}")
+        return {"error": "Request failed", "details": str(e)}
 
 
 def load(request):
