@@ -141,6 +141,7 @@ def create_script(store_hash, access_token, script_name):
 
 def load(request):
     signed_payload_jwt = request.GET.get('signed_payload_jwt')
+    
     if not signed_payload_jwt:
         return JsonResponse({'error': 'Missing signed_payload_jwt'}, status=400)
 
