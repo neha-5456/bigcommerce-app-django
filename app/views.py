@@ -116,42 +116,5 @@ def install(request):
 
 
 
-
-def verify_signed_payload(signed_payload):
-    try:
-        encoded_json, encoded_signature = signed_payload.split(".")
-        decoded_json = base64.urlsafe_b64decode(encoded_json + "==")
-        decoded_signature = base64.urlsafe_b64decode(encoded_signature + "==")
-
-        expected_signature = hmac.new(
-            CLIENT_SECRET.encode(), encoded_json.encode(), hashlib.sha256
-        ).digest()
-
-        if hmac.compare_digest(decoded_signature, expected_signature):
-            return json.loads(decoded_json)
-        return None
-    except Exception as e:
-        logger.error(f"Error verifying signed_payload: {str(e)}")
-        return None
-
-
-@csrf_exempt
 def load(request):
-    logger.info(f"Received GET request: {request.GET}")
-    logger.info(f"Received META data: {request.META}")
-
-    signed_payload = request.GET.get("signed_payload")
-    if not signed_payload:
-        logger.error("Missing signed_payload in request.")
-        return JsonResponse({"error": "Missing signed_payload"}, status=400)
-
-    # Verify signed payload
-    payload_data = verify_signed_payload(signed_payload)
-    if not payload_data:
-        logger.error("Invalid or unverified signed_payload.")
-        return JsonResponse({"error": "Invalid signed_payload"}, status=403)
-
-    store_hash = payload_data.get("context").split("/")[-1]
-    logger.info(f"Successfully loaded store_hash: {store_hash}")
-    
-    return render(request, "load.html", {"store_hash": store_hash})
+    return 12313
