@@ -5,7 +5,7 @@ import requests
 from django.http import JsonResponse
 import logging
 from .models import StoreData
-import IntegrityError
+# import IntegrityError
 import time
 
 def index(request):
@@ -77,14 +77,8 @@ def install(request):
         access_token = data.get("access_token")
         user_email = data.get("user", {}).get("email")
         
-        try:
-            # Save the store data
-            record = StoreData(store_hash=store_hash, access_token=access_token, user_email=user_email)
-            record.save()
-            logger.info(f"Store data saved: {store_hash}")
-        except IntegrityError as e:
-            logger.error(f"Error saving store data: {str(e)}")
-            return JsonResponse({"error": "Failed to save store data."}, status=500)
+        record = StoreData(store_hash=store_hash, access_token=access_token, user_email=user_email)
+        record.save()
 
         # Redirect to BigCommerce dashboard
         bigcommerce_dashboard_url = f"https://store-0sl32ohrbq.mybigcommerce.com/manage/app"
