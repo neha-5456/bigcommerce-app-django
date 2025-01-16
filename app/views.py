@@ -3,6 +3,8 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 import requests
 from django.http import JsonResponse
+import logging
+
 
 def index(request):
     now = datetime.now()
@@ -27,8 +29,8 @@ def test(request):
 # API PATH: https://api.bigcommerce.com/stores/0sl32ohrbq/v3/
 
 
-CLIENT_ID = '7k8045hpi7yytidpf6tzuzz8t10o3i2'
-CLIENT_SECRET = 'edf5b63b03b4e3eef72a4bca6ce41bc983c460661d4033ba49588304ea404188'
+CLIENT_ID = 'n52tn8ffugohj3n6w9ybda12laoc7r'
+CLIENT_SECRET = 'd4d1cc283a571aecb7793f8b6e80f1d3c37eb45740af0dcc7617cbc43a6ad3bc'
 REDIRECT_URI = "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/"
 
 # Step 1: Handle app installation
@@ -36,12 +38,14 @@ REDIRECT_URI = "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/"
 
 
 
+logger = logging.getLogger(__name__)
+
 def install(request):
     # Step 1: Prepare the payload for token exchange
     payload = {
         "client_id": CLIENT_ID,  # Replace with your environment variable or config
-        "client_secret": CLIENT_SECRET,
-        "redirect_uri": REDIRECT_URI,  # Replace with your environment variable or config
+        "client_secret":CLIENT_SECRET,
+        "redirect_uri":REDIRECT_URI,  # Replace with your environment variable or config
         "grant_type": "authorization_code",
         "code": request.GET.get("code"),
         "scope": request.GET.get("scope"),
@@ -63,7 +67,7 @@ def install(request):
         user_email = data.get("user", {}).get("email")
 
         # Step 4: Call create_script to register the app script
-        # create_script(store_hash, access_token, "app.js")
+        create_script(store_hash, access_token, "app.js")
 
         # Respond with success message or redirect to a success page
         return JsonResponse({"message": "App installed successfully", "store_hash": store_hash, "email": user_email})
@@ -71,31 +75,32 @@ def install(request):
     else:
         # Step 5: Handle errors
         error_message = response.json()
-    #    / logger.error(f"Error obtaining OAuth2 token: {error_message}")
+        logger.error(f"Error obtaining OAuth2 token: {error_message}")
         return JsonResponse({"error": "Authorization failed", "details": error_message}, status=response.status_code)
 
-# def create_script(store_hash, access_token, script_name):
-#     # Step 6: Register a script with BigCommerce API
-#     script_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/content/scripts"
-#     headers = {
-#         "X-Auth-Token": access_token,
-#         "Content-Type": "application/json",
-#     }
+def create_script(store_hash, access_token, script_name):
+    # Step 6: Register a script with BigCommerce API
+    script_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/content/scripts"
+    headers = {
+        "X-Auth-Token": access_token,
+        "Content-Type": "application/json",
+    }
 
-#     payload = {
-#         "name": script_name,
-#         "description": "A custom script for the BigCommerce app.",
-#         "html": "<script src='https://example.com/static/app.js'></script>",
-#         "auto_uninstall": True,
-#         "load_method": "default",
-#         "location": "footer",
-#         "visibility": "all",
-#         "kind": "script_tag",
-#     }
+    payload = {
+        "name": script_name,
+        "description": "A custom script for the BigCommerce app.",
+        "html": "<script src='https://example.com/static/app.js'></script>",
+        "auto_uninstall": True,
+        "load_method": "default",
+        "location": "footer",
+        "visibility": "all",
+        "kind": "script_tag",
+    }
 
-#     response = requests.post(script_url, json=payload, headers=headers)
+    response = requests.post(script_url, json=payload, headers=headers)
 
-#     if response.status_code == 201:
-#         # logger.info("Script successfully registered")
-#     else:
-#         # logger.error(f"Failed to create script: {response.text}")
+    if response.status_code == 201:
+        logger.info("Script successfully registered")
+    else:
+        logger.error(f"Failed to create script: {response.text}")
+
