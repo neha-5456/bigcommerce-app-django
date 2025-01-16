@@ -70,7 +70,7 @@ def install(request):
         create_script(store_hash, access_token, "app.js")
 
         # Respond with success message or redirect to a success page
-        return JsonResponse({"message": "App installed successfully", "store_hash": store_hash, "email": user_email})
+        return JsonResponse({"message": "App installed successfully", "store_hash": store_hash, "email": user_email, "access token": access_token, "data":data})
 
     else:
         # Step 5: Handle errors
