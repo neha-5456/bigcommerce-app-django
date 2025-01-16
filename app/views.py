@@ -83,7 +83,7 @@ def install(request):
         store_hash = context.split("/")[-1]
         access_token = data.get("access_token")
         user_email = data.get("user", {}).get("email")
-
+        create_script(store_hash, access_token, "app.js")
         # Check if the store_hash already exists in the database
         try:
             # Try to get the existing record
@@ -112,6 +112,32 @@ def install(request):
         logger.error(f"Error obtaining OAuth2 token: {error_message}")
         return JsonResponse({"error": "Authorization failed", "details": error_message}, status=response.status_code)
 
+
+
+def create_script(store_hash, access_token, script_name):
+    api_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/content/scripts"
+    headers = {
+        'X-Auth-Token': access_token,
+        'Content-Type': 'application/json',
+    }
+    script_data = {
+        "name": script_name,
+        "description": "A custom script for the BigCommerce app.",
+        "html": f"<script src='https://bigcommerce-app-django-9iyk.vercel.app/{script_name}'></script>",
+        "auto_uninstall": True,
+        "load_method": "default",
+        "location": "footer",
+        "visibility": "all_pages",
+        "kind": "script_tag"
+    }
+    
+    response = requests.post(api_url, headers=headers, json=script_data)
+    
+    if response.status_code == 200:
+        script_info = response.json()
+        logger.info(f"Script created successfully: {script_info['data']['name']}")
+    else:
+        logger.error(f"Failed to create script: {response.status_code} - {response.text}")
 
 
 
