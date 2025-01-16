@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your BigCommerce App</title>
-    <script src="https://cdn.bigcommerce.com/bc/app.js"></script>
+    <title>BigCommerce App UI</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <h1>Welcome to Your BigCommerce App</h1>
-    
-    <p>Store hash: {{ store_hash }}</p>
-    <p>Access token: {{ access_token }}</p>
-    
-    <!-- Your App UI Goes Here -->
-    <div id="app-content">
-        <!-- Example content: you can add your custom widgets, forms, etc. -->
-        <p>Custom UI components will go here.</p>
+    <div class="app-container">
+        <h1>Welcome to Your BigCommerce App</h1>
+        <p>This is the app UI that will be displayed in the BigCommerce dashboard.</p>
+        <!-- Your app's UI components go here -->
+        <button id="syncProductsBtn">Sync Products</button>
     </div>
-
-    <!-- Optional: Include custom JavaScript -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
-        // You can use BigCommerce's API, or add other custom JS here
-        console.log('BigCommerce app loaded');
+        // Example JavaScript to handle actions within the app UI
+        document.getElementById('syncProductsBtn').addEventListener('click', function() {
+            alert('Syncing products...');
+            // Make API calls to BigCommerce here to interact with the store
+        });
     </script>
 </body>
 </html>

@@ -7,7 +7,7 @@ urlpatterns = [
     # path('', install),
     path('', index),
     path('auth/callback/', install, name='auth_callback'),
-    path('load/', load, name='load_app'),
+    path('load/', load, name='load'),
    
     
 ]
