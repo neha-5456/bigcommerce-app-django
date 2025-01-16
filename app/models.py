@@ -1,3 +1,8 @@
 from django.db import models
 
-# Create your models here.
+class StoreData(models.Model):
+    store_hash = models.CharField(max_length=255, unique=True)
+    access_token = models.CharField(max_length=255)
+    user_email = models.EmailField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

@@ -4,7 +4,7 @@ from django.http import HttpResponse
 import requests
 from django.http import JsonResponse
 import logging
-
+from .models import StoreData
 
 def index(request):
     now = datetime.now()
@@ -65,7 +65,10 @@ def install(request):
         store_hash = context.split("/")[-1]  # Get store hash from context
         access_token = data.get("access_token")
         user_email = data.get("user", {}).get("email")
-
+        
+        
+        record = StoreData(store_hash=store_hash, access_token=access_token, user_email=user_email)
+        record.save()
         # Step 4: Call create_script to register the app script
         create_script(store_hash, access_token, "app.js")
 
