@@ -133,13 +133,4 @@ def verify_signed_payload(signed_payload):
 
 @csrf_exempt
 def load(request):
-    signed_payload = request.GET.get("signed_payload")
-    if not signed_payload:
-        return JsonResponse({"error": "Signed payload missing"}, status=400)
-
-    data = verify_signed_payload(signed_payload)
-    if not data:
-        return JsonResponse({"error": "Invalid signed payload"}, status=403)
-
-    # Handle valid signed payload
-    return JsonResponse({"message": "Load successful", "data": data})
+    return render(request, "load.html", {"store_hash": request.GET.get("store_hash")})
