@@ -7,10 +7,7 @@ import logging
 from .models import StoreData
 # import IntegrityError
 import time
-import hmac
-import hashlib
-import base64
-import json
+import jwt
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -143,14 +140,39 @@ def create_script(store_hash, access_token, script_name):
 
 
 def load(request):
+    signed_payload_jwt = request.GET.get('signed_payload_jwt')
+    if not signed_payload_jwt:
+        return JsonResponse({'error': 'Missing signed_payload_jwt'}, status=400)
+
+    try:
+        # Decode the JWT
+        payload = jwt.decode(
+            signed_payload_jwt,
+            CLIENT_SECRET,
+            algorithms=['0sl32ohrbq'],
+            audience=CLIENT_ID,
+        )
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({'error': 'Token has expired'}, status=401)
+    except jwt.InvalidTokenError as e:
+        return JsonResponse({'error': f'Invalid token: {str(e)}'}, status=401)
+
+    # Extract user and store information
+    user_data = payload.get('user', {})
+    store_hash = payload.get('sub', '').split('stores/')[1]
+
+    # Display HTML content with store and user info
     now = datetime.now()
     html = f'''
     <html>
         <body>
             <h1>Hello from Vercel!</h1>
             <p>The current time is { now }.</p>
+            <h2>User Info:</h2>
+            <p>Email: { user_data.get("email", "Unknown") }</p>
+            <h2>Store Info:</h2>
+            <p>Store Hash: { store_hash }</p>
         </body>
     </html>
     '''
     return HttpResponse(html)
-   
