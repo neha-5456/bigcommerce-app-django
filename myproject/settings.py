@@ -60,6 +60,9 @@ CORS_ALLOWED_ORIGINS = [
     "https://login.bigcommerce.com",
     "https://*.bigcommerce.com",
 ]
+CSRF_TRUSTED_ORIGINS = [
+    'https://bigcommerce-app-django-9iyk.vercel.app',
+]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

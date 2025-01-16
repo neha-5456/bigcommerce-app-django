@@ -11,6 +11,9 @@ import hmac
 import hashlib
 import base64
 import json
+from django.views.decorators.csrf import csrf_exempt
+
+
 def index(request):
     now = datetime.now()
     html = f'''
@@ -114,29 +117,29 @@ def install(request):
 
 
 
+def verify_signed_payload(signed_payload):
+    encoded_json, encoded_signature = signed_payload.split(".")
+    decoded_json = base64.b64decode(encoded_json + "==")
+    decoded_signature = base64.b64decode(encoded_signature + "==")
+
+    expected_signature = hmac.new(
+        CLIENT_SECRET.encode(), encoded_json.encode(), hashlib.sha256
+    ).digest()
+
+    if hmac.compare_digest(decoded_signature, expected_signature):
+        return json.loads(decoded_json)
+    else:
+        return None
+
+@csrf_exempt
 def load(request):
-    signed_payload = request.GET.get('signed_payload')
+    signed_payload = request.GET.get("signed_payload")
     if not signed_payload:
-        return JsonResponse({"error": "Missing signed payload"}, status=400)
+        return JsonResponse({"error": "Signed payload missing"}, status=400)
 
-    try:
-        # Decode signed payload
-        encoded_data, encoded_signature = signed_payload.split('.')
-        signature = base64.b64decode(encoded_signature)
-        expected_signature = hmac.new(
-            CLIENT_SECRET.encode(), msg=encoded_data.encode(), digestmod=hashlib.sha256
-        ).digest()
+    data = verify_signed_payload(signed_payload)
+    if not data:
+        return JsonResponse({"error": "Invalid signed payload"}, status=403)
 
-        if not hmac.compare_digest(signature, expected_signature):
-            return JsonResponse({"error": "Invalid signature"}, status=403)
-
-        # Decode and parse the data
-        data = json.loads(base64.b64decode(encoded_data).decode())
-        store_hash = data.get('context').split('/')[-1]
-        user_email = data.get('user', {}).get('email')
-
-        # Render the app UI
-        return render(request, 'load_app.html', {"store_hash": store_hash, "user_email": user_email})
-
-    except Exception as e:
-        return JsonResponse({"error": "Invalid payload", "details": str(e)}, status=400)
+    # Handle valid signed payload
+    return JsonResponse({"message": "Load successful", "data": data})
