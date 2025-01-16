@@ -5,6 +5,8 @@ import requests
 from django.http import JsonResponse
 import logging
 from .models import StoreData
+import IntegrityError
+
 
 def index(request):
     now = datetime.now()
@@ -66,13 +68,21 @@ def install(request):
         access_token = data.get("access_token")
         user_email = data.get("user", {}).get("email")
         
-        
-        
-        # Step 4: Call create_script to register the app script
-        create_script(store_hash, access_token, "app.js")
+        try:
+            # Save the store data to the database
+            record = StoreData(store_hash=store_hash, access_token=access_token, user_email=user_email)
+            record.save()
+            logger.info(f"Store data saved: {store_hash}")
+        except IntegrityError as e:
+            logger.error(f"Error saving store data: {str(e)}")
+            return JsonResponse({"error": "Failed to save store data."}, status=500)
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            return JsonResponse({"error": "Failed to save store data."}, status=500)
 
-        # Respond with success message or redirect to a success page
-        return JsonResponse({"message": "App installed successfully", "store_hash": store_hash, "email": user_email})
+        # Step 4: Redirect to a specific section of the BigCommerce app tore-0sl32ohrbq.mybigcommerce.com/manage/app/
+        bigcommerce_dashboard_url = f"https://store-0sl32ohrbq.mybigcommerce.com/manage/app"  # Example URL
+        return redirect(bigcommerce_dashboard_url)
 
     else:
         # Step 5: Handle errors
@@ -80,29 +90,29 @@ def install(request):
         logger.error(f"Error obtaining OAuth2 token: {error_message}")
         return JsonResponse({"error": "Authorization failed", "details": error_message}, status=response.status_code)
 
-def create_script(store_hash, access_token, script_name):
-    # Step 6: Register a script with BigCommerce API
-    script_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/content/scripts"
-    headers = {
-        "X-Auth-Token": access_token,
-        "Content-Type": "application/json",
-    }
+# def create_script(store_hash, access_token, script_name):
+#     # Step 6: Register a script with BigCommerce API
+#     script_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/content/scripts"
+#     headers = {
+#         "X-Auth-Token": access_token,
+#         "Content-Type": "application/json",
+#     }
 
-    payload = {
-        "name": script_name,
-        "description": "A custom script for the BigCommerce app.",
-        "html": "<script src='https://example.com/static/app.js'></script>",
-        "auto_uninstall": True,
-        "load_method": "default",
-        "location": "footer",
-        "visibility": "all",
-        "kind": "script_tag",
-    }
+#     payload = {
+#         "name": script_name,
+#         "description": "A custom script for the BigCommerce app.",
+#         "html": "<script src='https://example.com/static/app.js'></script>",
+#         "auto_uninstall": True,
+#         "load_method": "default",
+#         "location": "footer",
+#         "visibility": "all",
+#         "kind": "script_tag",
+#     }
 
-    response = requests.post(script_url, json=payload, headers=headers)
+#     response = requests.post(script_url, json=payload, headers=headers)
 
-    if response.status_code == 201:
-        logger.info("Script successfully registered")
-    else:
-        logger.error(f"Failed to create script: {response.text}")
+#     if response.status_code == 201:
+#         logger.info("Script successfully registered")
+#     else:
+#         logger.error(f"Failed to create script: {response.text}")
 
