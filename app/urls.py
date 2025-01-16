@@ -4,10 +4,10 @@ from app.views import  test , install , auth_callback
 
 
 urlpatterns = [
-    path('', install),
+    # path('', install),
     path('test/', test),
-    # path('install/', install, name='install'),
-    path('auth/callback/', auth_callback, name='auth_callback'),
+   
+    path('auth/callback/', install, name='auth_callback'),
    
     
 ]
