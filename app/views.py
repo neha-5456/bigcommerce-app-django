@@ -59,7 +59,7 @@ def install(request):
             return JsonResponse({"error": "Missing required query parameters"}, status=400)
 
         store_hash = context.split("/")[-1]
-        redirect_uri = REDIRECT_URI + request.path
+        redirect_uri = REDIRECT_URI 
 
         # Request OAuth token from BigCommerce
         token_url = "https://login.bigcommerce.com/oauth2/token"
