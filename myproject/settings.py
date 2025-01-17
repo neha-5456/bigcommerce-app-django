@@ -54,7 +54,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'app.middleware.AllowIframeMiddleware',
-    "app.middleware.SecurityHeadersMiddleware",
+    
 ]
 
 ROOT_URLCONF = 'myproject.urls'
@@ -97,9 +97,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'railway',
         'USER': 'postgres',
-        'PASSWORD': 'miHhZdlekeOdvVajJOFzUPdOfyDvvYgE',
+        'PASSWORD': 'tcUQpJELljRNEtIfYPNierDDynxdogGW',
         'HOST': 'autorack.proxy.rlwy.net',
-        'PORT': '32861',
+        'PORT': '14937',
     }
 }
 
