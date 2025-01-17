@@ -10,3 +10,11 @@ class AllowIframeMiddleware(MiddlewareMixin):
             del response["X-Frame-Options"]
         
         return response
+
+class SecurityHeadersMiddleware(MiddlewareMixin):
+    def process_response(self, request, response):
+        response["Content-Security-Policy"] = (
+            "frame-ancestors 'self' https://*.bigcommerce.com https://my-store.com;"
+        )
+        response["X-Frame-Options"] = "ALLOWALL"
+        return response
