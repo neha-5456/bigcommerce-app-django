@@ -114,7 +114,8 @@ def install(request):
 
         # Log user in and redirect
         request.session["store_user_id"] = store_user.id
-        return redirect(REDIRECT_URI)
+        bigcommerce_dashboard_url = f"https://store-0sl32ohrbq.mybigcommerce.com/manage/app"
+        return redirect(bigcommerce_dashboard_url)
 
     except Exception as e:
         logger.error(f"Error in auth_callback: {str(e)}")
