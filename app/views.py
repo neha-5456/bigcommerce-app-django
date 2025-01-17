@@ -46,18 +46,23 @@ logger = logging.getLogger(__name__)
 def install(request):
     
     try:
+        # Log the request
+        logger.info(f"Request method: {request.method}")
+        logger.info(f"Query parameters: {request.GET}")
+
         # Extract query parameters
         code = request.GET.get("code")
         context = request.GET.get("context")
         scope = request.GET.get("scope")
 
         if not code or not context or not scope:
+            logger.warning("Missing required query parameters")
             return JsonResponse({"error": "Missing required query parameters"}, status=400)
 
         store_hash = context.split("/")[-1]
         redirect_uri = REDIRECT_URI 
 
-        # Request OAuth token from BigCommerce
+        # Request OAuth token
         token_url = "https://login.bigcommerce.com/oauth2/token"
         payload = {
             "client_id": CLIENT_ID,
@@ -70,59 +75,59 @@ def install(request):
         }
 
         response = requests.post(token_url, json=payload)
-        print(response)
+        logger.info(f"BigCommerce response status: {response.status_code}")
+        logger.info(f"BigCommerce response content: {response.content}")
+
         if response.status_code != 200:
             logger.error(f"Failed to fetch token: {response.json()}")
             return JsonResponse({"error": "Failed to fetch token", "details": response.json()}, status=400)
 
         token_data = response.json()
-        bc_user_id = token_data["user"]["id"]
-        email = token_data["user"]["email"]
         access_token = token_data["access_token"]
+        email = token_data["user"]["email"]
+        bc_user_id = token_data["user"]["id"]
 
-        # Transaction to ensure data consistency
+        # Database operations
         with transaction.atomic():
-            # Create or update store
+            logger.info("Starting database transaction")
             store, created = Store.objects.get_or_create(
                 store_hash=store_hash,
                 defaults={"access_token": access_token, "scope": scope},
             )
+            logger.info(f"Store created: {created}, Store data: {store}")
+
             if not created:
                 store.access_token = access_token
                 store.scope = scope
                 store.save()
-
-                # Reset admin status for the old admin
                 StoreUser.objects.filter(store=store, admin=True).update(admin=False)
 
-            # Create or update user
             user, user_created = User.objects.get_or_create(
                 bc_id=bc_user_id, defaults={"email": email}
             )
+            logger.info(f"User created: {user_created}, User data: {user}")
+
             if not user_created and user.email != email:
                 user.email = email
                 user.save()
 
-            # Create or update store user
             store_user, store_user_created = StoreUser.objects.get_or_create(
                 store=store,
                 user=user,
                 defaults={"admin": True},
             )
+            logger.info(f"StoreUser created: {store_user_created}, StoreUser data: {store_user}")
+
             if not store_user_created:
                 store_user.admin = True
                 store_user.save()
-        logger.info(f"OAuth payload: {payload}")
-        logger.info(f"BigCommerce token URL: {token_url}")
-        logger.info(f"BigCommerce response status: {response.status_code}")
-        logger.info(f"BigCommerce response content: {response.content}")
-        # Log user in and redirect
-        request.session["store_user_id"] = store_user.id
-        bigcommerce_dashboard_url = f"https://store-0sl32ohrbq.mybigcommerce.com/manage/app"
+
+        # Redirect
+        bigcommerce_dashboard_url = f"https://store-{store_hash}.mybigcommerce.com/manage/app"
         return redirect(bigcommerce_dashboard_url)
 
     except Exception as e:
-        logger.error(f"Error in auth_callback: {str(e)}")
+        logger.error(f"Error in install: {str(e)}")
         return JsonResponse({"error": "An error occurred during authentication"}, status=500)
     # # Prepare the payload
     # payload = {
