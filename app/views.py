@@ -70,6 +70,7 @@ def install(request):
         }
 
         response = requests.post(token_url, json=payload)
+        print(response)
         if response.status_code != 200:
             logger.error(f"Failed to fetch token: {response.json()}")
             return JsonResponse({"error": "Failed to fetch token", "details": response.json()}, status=400)
@@ -111,7 +112,10 @@ def install(request):
             if not store_user_created:
                 store_user.admin = True
                 store_user.save()
-
+        logger.info(f"OAuth payload: {payload}")
+        logger.info(f"BigCommerce token URL: {token_url}")
+        logger.info(f"BigCommerce response status: {response.status_code}")
+        logger.info(f"BigCommerce response content: {response.content}")
         # Log user in and redirect
         request.session["store_user_id"] = store_user.id
         bigcommerce_dashboard_url = f"https://store-0sl32ohrbq.mybigcommerce.com/manage/app"
