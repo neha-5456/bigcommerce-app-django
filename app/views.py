@@ -41,11 +41,7 @@ REDIRECT_URI = "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/"
 
 # Step 1: Handle app installation
 
-
-
-
 logger = logging.getLogger(__name__)
-from django.db import IntegrityError
 
 def install(request):
     
