@@ -38,7 +38,7 @@ def test(request):
 
 CLIENT_ID = 'n52tn8ffugohj3n6w9ybda12laoc7r'
 CLIENT_SECRET = 'd4d1cc283a571aecb7793f8b6e80f1d3c37eb45740af0dcc7617cbc43a6ad3bc'
-REDIRECT_URI = "https://bigcommerce-app-django-9iyk.vercel.app/auth/callback/"
+REDIRECT_URI = "https://bigcommerce-app-django.vercel.app/auth/callback/"
 
 # Step 1: Handle app installation
 
@@ -132,7 +132,7 @@ def install(request):
 
             # Redirect
             bigcommerce_dashboard_url = f"https://store-{store_hash}.mybigcommerce.com/manage/app"
-            return redirect(bigcommerce_dashboard_url)
+            return redirect('https://bigcommerce-app-django.vercel.app/')
 
         except Exception as e:
             logger.error(f"Error in install: {str(e)}")
