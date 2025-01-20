@@ -11,7 +11,7 @@ from django.db import transaction
 from .models import Store, User, StoreUser
 from .utils import decode_and_verify_jwt
 import json
-
+from bigcommerce.api import BigcommerceApi
 
 def index(request):
     now = datetime.now()
@@ -38,167 +38,164 @@ def test(request):
 
 CLIENT_ID = 'n52tn8ffugohj3n6w9ybda12laoc7r'
 CLIENT_SECRET = 'd4d1cc283a571aecb7793f8b6e80f1d3c37eb45740af0dcc7617cbc43a6ad3bc'
-REDIRECT_URI = "https://bigcommerce-app-django.vercel.app/auth/callback/"
+# REDIRECT_URI = "https://bigcommerce-app-django.vercel.app/auth/callback/"
+APP_URL = "https://bigcommerce-app-django.vercel.app"
 
 # Step 1: Handle app installation
 
 logger = logging.getLogger(__name__)
 
 def install(request):
-    if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
-        logger.info(f"POST payload: {data}")
-        code = data.get("code")
-        context = data.get("context")
-        scope = data.get("scope")
-    else:  # GET request
-        
-        try:
-            # Log the request
-            logger.info(f"Request method: {request.method}")
-            logger.info(f"Query parameters: {request.GET}")
+    code = request.GET.get('code')
+    context = request.GET.get('context')
+    scope = request.GET.get('scope')
+    store_hash = context.split('/')[1]
+    redirect_url = f"{APP_URL}{request.path}"
 
-            # Extract query parameters
-            code = request.GET.get("code")
-            context = request.GET.get("context")
-            scope = request.GET.get("scope")
+    # Initialize the BigCommerce API client
+    client = BigcommerceApi(client_id=CLIENT_ID, store_hash=store_hash)
+    
+    # Fetch the OAuth token
+    token = client.oauth_fetch_token(
+        client_secret=CLIENT_SECRET,
+        code=code,
+        context=context,
+        scope=scope,
+        redirect_uri=redirect_url
+    )
 
-            if not code or not context or not scope:
-                logger.warning("Missing required query parameters")
-                return JsonResponse({"error": "Missing required query parameters"}, status=400)
+    bc_user_id = token['user']['id']
+    email = token['user']['email']
+    access_token = token['access_token']
 
-            store_hash = context.split("/")[-1]
-            redirect_uri = REDIRECT_URI 
-
-            # Request OAuth token
-            token_url = "https://login.bigcommerce.com/oauth2/token"
-            payload = {
-                "client_id": CLIENT_ID,
-                "client_secret": CLIENT_SECRET,
-                "code": code,
-                "context": context,
-                "scope": scope,
-                "grant_type": "authorization_code",
-                "redirect_uri": redirect_uri,
+    # Transaction to ensure database consistency
+    with transaction.atomic():
+        # Create or update the Store
+        store, created = Store.objects.update_or_create(
+            store_hash=store_hash,
+            defaults={
+                'access_token': access_token,
+                'scope': scope
             }
+        )
 
-            response = requests.post(token_url, json=payload)
-            logger.info(f"BigCommerce response status: {response.status_code}")
-            logger.info(f"BigCommerce response content: {response.content}")
+        # If the store existed, revoke the old admin
+        if not created:
+            StoreUser.objects.filter(store=store, admin=True).update(admin=False)
 
-            if response.status_code != 200:
-                logger.error(f"Failed to fetch token: {response.json()}")
-                return JsonResponse({"error": "Failed to fetch token", "details": response.json()}, status=400)
+        # Create or update the User
+        user, _ = User.objects.update_or_create(
+            bc_id=bc_user_id,
+            defaults={'email': email}
+        )
 
-            token_data = response.json()
-            access_token = token_data["access_token"]
-            email = token_data["user"]["email"]
-            bc_user_id = token_data["user"]["id"]
+        # Create or update the StoreUser
+        store_user, _ = StoreUser.objects.update_or_create(
+            store=store,
+            user=user,
+            defaults={'admin': True}
+        )
 
-            # Database operations
-            with transaction.atomic():
-                logger.info("Starting database transaction")
-                store, created = Store.objects.get_or_create(
-                    store_hash=store_hash,
-                    defaults={"access_token": access_token, "scope": scope},
-                )
-                logger.info(f"Store created: {created}, Store data: {store}")
+    # Store the StoreUser ID in the session
+    request.session['storeuserid'] = store_user.id
 
-                if not created:
-                    store.access_token = access_token
-                    store.scope = scope
-                    store.save()
-                    StoreUser.objects.filter(store=store, admin=True).update(admin=False)
+    # Redirect to the app home
+    return redirect(APP_URL)
 
-                user, user_created = User.objects.get_or_create(
-                    bc_id=bc_user_id, defaults={"email": email}
-                )
-                logger.info(f"User created: {user_created}, User data: {user}")
-
-                if not user_created and user.email != email:
-                    user.email = email
-                    user.save()
-
-                store_user, store_user_created = StoreUser.objects.get_or_create(
-                    store=store,
-                    user=user,
-                    defaults={"admin": True},
-                )
-                logger.info(f"StoreUser created: {store_user_created}, StoreUser data: {store_user}")
-
-                if not store_user_created:
-                    store_user.admin = True
-                    store_user.save()
-
-            # Redirect
-            bigcommerce_dashboard_url = f"https://store-{store_hash}.mybigcommerce.com/manage/app"
-            return redirect('https://bigcommerce-app-django.vercel.app/')
-
-        except Exception as e:
-            logger.error(f"Error in install: {str(e)}")
-        return JsonResponse({"error": "An error occurred during authentication"}, status=500)
-    # # Prepare the payload
-    # payload = {
-    #     "client_id": CLIENT_ID,
-    #     "client_secret": CLIENT_SECRET,
-    #     "redirect_uri": REDIRECT_URI,
-    #     "grant_type": "authorization_code",
-    #     "code": request.GET.get("code"),
-    #     "scope": request.GET.get("scope"),
-    #     "context": request.GET.get("context"),
-    # }
-
-    # # BigCommerce OAuth2 token URL
-    # token_url = "https://login.bigcommerce.com/oauth2/token"
-
-    # # Retry logic
-    # for attempt in range(3):  # Retry 3 times
-    #     try:
-    #         response = requests.post(token_url, json=payload, timeout=30)
-    #         if response.status_code == 200:
-    #             break
-    #     except requests.exceptions.RequestException as e:
-    #         logger.error(f"Error on attempt {attempt + 1}: {str(e)}")
-    #         if attempt == 2:  # Last attempt
-    #             return JsonResponse({"error": "Failed to obtain token after retries."}, status=504)
-    #         time.sleep(5)  # Wait 5 seconds before retrying
-
-    # if response.status_code == 200:
-    #     # Handle successful response
-    #     data = response.json()
-    #     context = data.get("context")
-    #     store_hash = context.split("/")[-1]
-    #     access_token = data.get("access_token")
-    #     user_email = data.get("user", {}).get("email")
-    #     create_script(store_hash, access_token, "app.js")
-    #     # Check if the store_hash already exists in the database
-    #     try:
-    #         # Try to get the existing record
-    #         store_data = StoreData.objects.get(store_hash=store_hash)
-    #         # If found, update the access token
-    #         store_data.access_token = access_token
-    #         store_data.user_email = user_email
-    #         store_data.save()
-    #         logger.info(f"Updated access token for store {store_hash}.")
-    #     except StoreData.DoesNotExist:
-    #         # If not found, create a new record
-    #         store_data = StoreData(store_hash=store_hash, access_token=access_token, user_email=user_email)
-    #         store_data.save()
-    #         logger.info(f"New store data added for {store_hash}.")
+# def install(request):
+#     if request.method == 'POST':
+#         data = json.loads(request.body.decode('utf-8'))
+#         logger.info(f"POST payload: {data}")
+#         code = data.get("code")
+#         context = data.get("context")
+#         scope = data.get("scope")
+#     else:  # GET request
         
-    #     # Create script or perform additional actions
-    #     # create_script(store_hash, access_token, "app.js")
-        
-    #     # Redirect to BigCommerce dashboard
-    #     bigcommerce_dashboard_url = f"https://store-0sl32ohrbq.mybigcommerce.com/manage/app"
-    #     return redirect(bigcommerce_dashboard_url)
+#         try:
+#             # Log the request
+#             logger.info(f"Request method: {request.method}")
+#             logger.info(f"Query parameters: {request.GET}")
 
-    # else:
-    #     # Handle API error
-    #     error_message = response.json()
-    #     logger.error(f"Error obtaining OAuth2 token: {error_message}")
-    #     return JsonResponse({"error": "Authorization failed", "details": error_message}, status=response.status_code)
+#             # Extract query parameters
+#             code = request.GET.get("code")
+#             context = request.GET.get("context")
+#             scope = request.GET.get("scope")
 
+#             if not code or not context or not scope:
+#                 logger.warning("Missing required query parameters")
+#                 return JsonResponse({"error": "Missing required query parameters"}, status=400)
+
+#             store_hash = context.split("/")[-1]
+#             redirect_uri = REDIRECT_URI 
+
+#             # Request OAuth token
+#             token_url = "https://login.bigcommerce.com/oauth2/token"
+#             payload = {
+#                 "client_id": CLIENT_ID,
+#                 "client_secret": CLIENT_SECRET,
+#                 "code": code,
+#                 "context": context,
+#                 "scope": scope,
+#                 "grant_type": "authorization_code",
+#                 "redirect_uri": redirect_uri,
+#             }
+
+#             response = requests.post(token_url, json=payload)
+#             logger.info(f"BigCommerce response status: {response.status_code}")
+#             logger.info(f"BigCommerce response content: {response.content}")
+
+#             if response.status_code != 200:
+#                 logger.error(f"Failed to fetch token: {response.json()}")
+#                 return JsonResponse({"error": "Failed to fetch token", "details": response.json()}, status=400)
+
+#             token_data = response.json()
+#             access_token = token_data["access_token"]
+#             email = token_data["user"]["email"]
+#             bc_user_id = token_data["user"]["id"]
+
+#             # Database operations
+#             with transaction.atomic():
+#                 logger.info("Starting database transaction")
+#                 store, created = Store.objects.get_or_create(
+#                     store_hash=store_hash,
+#                     defaults={"access_token": access_token, "scope": scope},
+#                 )
+#                 logger.info(f"Store created: {created}, Store data: {store}")
+
+#                 if not created:
+#                     store.access_token = access_token
+#                     store.scope = scope
+#                     store.save()
+#                     StoreUser.objects.filter(store=store, admin=True).update(admin=False)
+
+#                 user, user_created = User.objects.get_or_create(
+#                     bc_id=bc_user_id, defaults={"email": email}
+#                 )
+#                 logger.info(f"User created: {user_created}, User data: {user}")
+
+#                 if not user_created and user.email != email:
+#                     user.email = email
+#                     user.save()
+
+#                 store_user, store_user_created = StoreUser.objects.get_or_create(
+#                     store=store,
+#                     user=user,
+#                     defaults={"admin": True},
+#                 )
+#                 logger.info(f"StoreUser created: {store_user_created}, StoreUser data: {store_user}")
+
+#                 if not store_user_created:
+#                     store_user.admin = True
+#                     store_user.save()
+
+#             # Redirect
+#             bigcommerce_dashboard_url = f"https://store-{store_hash}.mybigcommerce.com/manage/app"
+#             return redirect('https://bigcommerce-app-django.vercel.app/')
+
+#         except Exception as e:
+#             logger.error(f"Error in install: {str(e)}")
+#         return JsonResponse({"error": "An error occurred during authentication"}, status=500)
+   
 
 
 def create_script(store_hash, access_token, script_name):
