@@ -66,7 +66,8 @@ CORS_ALLOWED_ORIGINS = [
 CSRF_TRUSTED_ORIGINS = [
     'https://bigcommerce-app-django-9iyk.vercel.app',
 ]
-X_FRAME_OPTIONS = 'ALLOWALL'
+X_FRAME_OPTIONS = "ALLOW-FROM https://*.bigcommerce.com"
+
 SESSION_COOKIE_SECURE = True  # Ensures cookies are only sent over HTTPS
 CSRF_COOKIE_SECURE = True
 TEMPLATES = [
