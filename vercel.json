@@ -15,6 +15,21 @@
         "src": "/(.*)",
         "dest": "myproject/wsgi.py"
       }
+    ],
+    "headers": [
+      {
+        "source": "/(.*)",
+        "headers": [
+          {
+            "key": "Content-Security-Policy",
+            "value": "frame-ancestors 'self' https://*.bigcommerce.com"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "ALLOWALL"
+          }
+        ]
+      }
     ]
     
   }

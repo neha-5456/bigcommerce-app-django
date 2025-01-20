@@ -12,3 +12,4 @@ class AllowIframeMiddleware:
         response['X-Frame-Options'] = 'ALLOW-FROM https://*.bigcommerce.com'
         response['Content-Security-Policy'] = "frame-ancestors 'self' https://*.bigcommerce.com"
         return response
+    
