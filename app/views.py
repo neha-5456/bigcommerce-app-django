@@ -13,17 +13,16 @@ from .utils import decode_and_verify_jwt
 import json
 from bigcommerce.api import BigcommerceApi
 
+
+
+
+
 def index(request):
-    # now = datetime.now()
-    html = f'''
-    <html>
-        <body>
-            <h1>Hello from Vercel!</h1>
-            <p>The current time is jghjfhkf.</p>
-        </body>
-    </html>
-    '''
-    return HttpResponse(html)
+    response = HttpResponse("<h1>Hello World</h1>")
+    # Set the CSP header for this view
+    response['Content-Security-Policy'] = "frame-ancestors 'self' https://*.bigcommerce.com"
+    return response
+   
 
 def test(request):
     return render(request, 'index.html')
