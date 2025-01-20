@@ -170,93 +170,9 @@ def load(request):
     request.session['storeuserid'] = store_user.id
 
     # Redirect to the app interface
-    return redirect(APP_URL)
-
-
-
-    try:
-        # Decode and verify payload
-        payload = request.GET.get("signed_payload_jwt")
-        if not payload:
-            return JsonResponse({"error": "Missing signed_payload_jwt"}, status=400)
-
-        try:
-            user_data = decode_and_verify_jwt(payload, CLIENT_SECRET, CLIENT_ID)
-        except Exception as e:
-            logger.error(f"JWT verification error: {str(e)}")
-            return JsonResponse({"error": "Invalid JWT"}, status=401)
-
-        bc_user_id = user_data["user"]["id"]
-        email = user_data["user"]["email"]
-        store_hash = user_data["sub"].split("stores/")[1]
-
-        # Lookup store
-        try:
-            store = Store.objects.get(store_hash=store_hash)
-        except Store.DoesNotExist:
-            return JsonResponse({"error": "Store not found"}, status=401)
-
-        # Lookup user and create if doesn't exist
-        user, user_created = User.objects.get_or_create(
-            bc_id=bc_user_id,
-            defaults={"email": email}
-        )
-        if not user_created and user.email != email:
-            user.email = email
-            user.save()
-
-        # Lookup store user and create if doesn't exist
-        with transaction.atomic():
-            store_user, store_user_created = StoreUser.objects.get_or_create(
-                user=user, store=store
-            )
-
-        # Log user in
-        request.session["store_user_id"] = store_user.id
-
-        # Redirect to app interface
-        return redirect(REDIRECT_URI)
-
-    except Exception as e:
-        logger.error(f"Error in load function: {str(e)}")
-        return JsonResponse({"error": "An error occurred", "details": str(e)}, status=500)
-    
-    
-    
-    # signed_payload_jwt = request.GET.get('signed_payload_jwt')
-    
-    # if not signed_payload_jwt:
-    #     return JsonResponse({'error': 'Missing signed_payload_jwt'}, status=400)
-
-    # try:
-    #     # Decode the JWT with HS256 (assuming BigCommerce uses HS256)
-    #     payload = jwt.decode(
-    #         signed_payload_jwt,
-    #         CLIENT_SECRET,  # Ensure your CLIENT_SECRET is correctly set in settings.py
-    #         algorithms=['0sl32ohrbq'],
-    #         audience=CLIENT_ID,  # Ensure CLIENT_ID is set in settings.py
-    #     )
-    # except jwt.ExpiredSignatureError:
-    #     return JsonResponse({'error': 'Token has expired'}, status=401)
-    # except jwt.InvalidTokenError as e:
-    #     return JsonResponse({'error': f'Invalid token: {str(e)}'}, status=401)
-
-    # # Extract user and store information
-    # user_data = payload.get('user', {})
-    # store_hash = payload.get('sub', '').split('stores/')[1]
-
-    # # Display HTML content with store and user info
-    # now = datetime.now()
-    # html = f'''
-    # <html>
-    #     <body>
-    #         <h1>Hello from Vercel!</h1>
-    #         <p>The current time is {now}.</p>
-    #         <h2>User Info:</h2>
-    #         <p>Email: {user_data.get("email", "Unknown")}</p>
-    #         <h2>Store Info:</h2>
-    #         <p>Store Hash: {store_hash}</p>
-    #     </body>
-    # </html>
-    # '''
-    # return HttpResponse(html)
+    # return redirect(APP_URL)
+    response = HttpResponse("<h1>Hello World</h1>")
+    # Set the CSP header for this view
+    response['Content-Security-Policy'] = "frame-ancestors 'self' https://*.bigcommerce.com"
+    return response
+   
