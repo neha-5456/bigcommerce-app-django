@@ -67,7 +67,12 @@ CSRF_TRUSTED_ORIGINS = [
     'https://bigcommerce-app-django-9iyk.vercel.app',
 ]
 X_FRAME_OPTIONS = "ALLOW-FROM https://*.bigcommerce.com"
-
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+CONTENT_SECURITY_POLICY = {
+    'default-src': ["'self'", 'https://*.bigcommerce.com'],
+    'frame-ancestors': ["'self'", 'https://*.bigcommerce.com'],
+}
 SESSION_COOKIE_SECURE = True  # Ensures cookies are only sent over HTTPS
 CSRF_COOKIE_SECURE = True
 TEMPLATES = [
@@ -102,9 +107,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'railway',
         'USER': 'postgres',
-        'PASSWORD': 'pdcsqHQpAGIRprQnFhFKghYxcnAiRYEQ',
-        'HOST': 'viaduct.proxy.rlwy.net',
-        'PORT': '46352',
+        'PASSWORD': 'MUfUDARywucCZCLvumhtxCDhbXWKJAki',
+        'HOST': 'monorail.proxy.rlwy.net',
+        'PORT': '57861',
     }
 }
 
