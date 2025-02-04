@@ -12,9 +12,11 @@ from .models import Store, User, StoreUser
 from .utils import decode_and_verify_jwt
 import json
 from bigcommerce.api import BigcommerceApi
+from django.views.decorators.csrf import csrf_exempt
 
-
-
+@csrf_exempt
+def bc_proxy(request):
+    return JsonResponse({"message": "BigCommerce App Loaded Successfully"})
 
 
 def index(request):
@@ -107,36 +109,10 @@ def install(request):
     return redirect(APP_URL)
 
 
-
-def create_script(store_hash, access_token, script_name):
-    api_url = f"https://api.bigcommerce.com/stores/{store_hash}/v3/content/scripts"
-    headers = {
-        'X-Auth-Token': access_token,
-        'Content-Type': 'application/json',
-    }
-    script_data = {
-        "name": script_name,
-        "description": "A custom script for the BigCommerce app.",
-        "html": f"<script src='https://bigcommerce-app-django-9iyk.vercel.app/{script_name}'></script>",
-        "auto_uninstall": True,
-        "load_method": "default",
-        "location": "footer",
-        "visibility": "all_pages",
-        "kind": "script_tag"
-    }
-    
-    response = requests.post(api_url, headers=headers, json=script_data)
-    
-    if response.status_code == 200:
-        script_info = response.json()
-        logger.info(f"Script created successfully: {script_info['data']['name']}")
-    else:
-        logger.error(f"Failed to create script: {response.status_code} - {response.text}")
-
-
 def load(request):
-    return HttpResponse("""
-        <script>
-            window.open('https://bigcommerce-app-django.vercel.app/', '_blank');
-        </script>
-    """)
+    response = HttpResponse('Your content here')
+    
+    # Set the Content-Security-Policy header to allow BigCommerce iframe embedding
+    response['Content-Security-Policy'] = "frame-ancestors 'self' https://*.bigcommerce.com;"
+    
+    return response
