@@ -1,36 +1,34 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "myproject/wsgi.py",
-        "use": "@vercel/python",
-        "config": {
-          "maxLambdaSize": "50mb",
-          "runtime": "python3"
+  "version": 2,
+  "builds": [
+    {
+      "src": "myproject/wsgi.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb",
+        "runtime": "python3"
+      }
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "myproject/wsgi.py"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://*.bigcommerce.com"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "ALLOWALL"
         }
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "myproject/wsgi.py"
-      }
-    ],
-    "headers": [
-      {
-        "source": "/(.*)",
-        "headers": [
-          {
-            "key": "Content-Security-Policy",
-            "value": "frame-ancestors 'self' https://*.bigcommerce.com"
-          },
-          {
-            "key": "X-Frame-Options",
-            "value": "ALLOWALL"
-          }
-        ]
-      }
-    ]
-    
-  }
-  
+      ]
+    }
+  ]
+}
