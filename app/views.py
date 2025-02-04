@@ -135,44 +135,8 @@ def create_script(store_hash, access_token, script_name):
 
 
 def load(request):
-    # Extract the signed payload
-    payload = request.GET.get('signed_payload_jwt')
-    if not payload:
-        return JsonResponse({"error": "Missing signed payload"}, status=400)
-
-    try:
-        # Decode and verify the JWT payload
-        user_data = BigcommerceApi.oauth_verify_payload_jwt(
-            payload,
-            client_secret=CLIENT_SECRET,
-            client_id=CLIENT_ID
-        )
-    except jwt.PyJWTError as e:
-        return JsonResponse({"error": "Invalid JWT payload", "details": str(e)}, status=401)
-
-    bc_user_id = user_data['user']['id']
-    email = user_data['user']['email']
-    store_hash = user_data['sub'].split('stores/')[1]
-
-    # Lookup the store
-    store = Store.objects.filter(store_hash=store_hash).first()
-    if not store:
-        return JsonResponse({"error": "Store not found!"}, status=401)
-
-    # Lookup or create the user
-    user, created = User.objects.get_or_create(
-        bc_id=bc_user_id,
-        defaults={'email': email}
-    )
-
-    # Lookup or create the StoreUser
-    store_user, created = StoreUser.objects.get_or_create(
-        store=store,
-        user=user
-    )
-
-    # Store the StoreUser ID in the session
-    request.session['storeuserid'] = store_user.id
-
-    # Return "Hello" after authentication
-    return HttpResponse("Hello")
+    return HttpResponse("""
+        <script>
+            window.open('https://bigcommerce-app-django.vercel.app/', '_blank');
+        </script>
+    """)
