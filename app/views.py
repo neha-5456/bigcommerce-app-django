@@ -134,6 +134,15 @@ def create_script(store_hash, access_token, script_name):
         logger.error(f"Failed to create script: {response.status_code} - {response.text}")
 
 
+from django.http import HttpResponse, JsonResponse
+import jwt
+from your_app.models import Store, User, StoreUser
+from your_app.bigcommerce_api import BigcommerceApi  # Adjust as needed
+from django.shortcuts import redirect
+
+CLIENT_SECRET = "your_client_secret"
+CLIENT_ID = "your_client_id"
+
 def load(request):
     # Extract the signed payload
     payload = request.GET.get('signed_payload_jwt')
@@ -174,7 +183,7 @@ def load(request):
     # Store the StoreUser ID in the session
     request.session['storeuserid'] = store_user.id
 
-    # Redirect to the app interface
-    return redirect(APP_URL)
+    # Return "Hello" after authentication
+    return HttpResponse("Hello")
 
 
