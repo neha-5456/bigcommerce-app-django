@@ -113,6 +113,8 @@ def load(request):
     response = HttpResponse('Your content here')
     
     # Set the Content-Security-Policy header to allow BigCommerce iframe embedding
-    response['Content-Security-Policy'] = "frame-ancestors 'self' https://*.bigcommerce.com;"
+    # Remove X-Frame-Options or set it to allow BigCommerce
+    response['X-Frame-Options'] = 'ALLOW-FROM https://*.bigcommerce.com'
+    # response['Content-Security-Policy'] = "frame-ancestors 'self' https://*.bigcommerce.com;"
     
     return response
