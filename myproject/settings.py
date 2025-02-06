@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'csp.middleware.CSPMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -54,6 +55,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'app.middleware.CSPMiddleware',
+   
     
 ]
 
@@ -65,7 +67,10 @@ CORS_ALLOWED_ORIGINS = [
 CSRF_TRUSTED_ORIGINS = [
     'https://bigcommerce-app-django-9iyk.vercel.app',
 ]
-X_FRAME_OPTIONS = "ALLOW-FROM https://*.bigcommerce.com"
+X_FRAME_OPTIONS = 'ALLOWALL'
+CSP_FRAME_ANCESTORS = ["'self'", "https://bigcommerce.com"]
+CSP_DEFAULT_SRC = ["'self'"]
+
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 CONTENT_SECURITY_POLICY = {
